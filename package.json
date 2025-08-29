@@ -1,0 +1,130 @@
+{
+    "name": "vscode-activity-tracker",
+    "displayName": "Activity Tracker",
+    "description": "Counts keystrokes and detects idle time while coding (local only).",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onStartupFinished",
+        "onCommand:activityTracker.showStats",
+        "onCommand:activityTracker.resetToday",
+        "onCommand:activityTracker.exportTodayJSON",
+        "onCommand:activityTracker.exportTodayCSV",
+        "onCommand:activityTracker.trackUndo",
+        "onCommand:activityTracker.trackRedo",
+        "onCommand:activityTracker.trackCompile"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "activityTracker.showStats",
+                "title": "Activity Tracker: Show Today’s Stats"
+            },
+            {
+                "command": "activityTracker.resetToday",
+                "title": "Activity Tracker: Reset Today"
+            },
+            {
+                "command": "activityTracker.exportTodayJSON",
+                "title": "Activity Tracker: Export Today (JSON)"
+            },
+            {
+                "command": "activityTracker.exportTodayCSV",
+                "title": "Activity Tracker: Export Today (CSV)"
+            },
+            {
+                "command": "activityTracker.uploadNow",
+                "title": "Activity Tracker: Upload CSV Now"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "activityTracker.trackUndo",
+                "key": "ctrl+z",
+                "when": "editorTextFocus && !inDebugRepl"
+            },
+            {
+                "command": "activityTracker.trackUndo",
+                "key": "cmd+z",
+                "when": "isMac && editorTextFocus && !inDebugRepl"
+            },
+            {
+                "command": "activityTracker.trackRedo",
+                "key": "ctrl+y",
+                "when": "editorTextFocus && !inDebugRepl"
+            },
+            {
+                "command": "activityTracker.trackRedo",
+                "key": "cmd+shift+z",
+                "when": "isMac && editorTextFocus && !inDebugRepl"
+            },
+            {
+                "command": "activityTracker.trackCompile",
+                "key": "ctrl+shift+b",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "activityTracker.trackCompile",
+                "key": "cmd+shift+b",
+                "when": "isMac && editorTextFocus"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Activity Tracker",
+            "properties": {
+                "activityTracker.idleMs": {
+                    "type": "number",
+                    "default": 60000,
+                    "minimum": 5000,
+                    "description": "How long (ms) without activity counts as idle."
+                },
+                "activityTracker.autoUpload.enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Automatically upload today's CSV to a server."
+                },
+                "activityTracker.autoUpload.endpoint": {
+                    "type": "string",
+                    "default": "",
+                    "description": "HTTPS endpoint to POST the CSV to (e.g., https://yourdomain.com/upload)."
+                },
+                "activityTracker.autoUpload.authToken": {
+                    "type": "string",
+                    "default": "",
+                    "markdownDescription": "Optional bearer token for Authorization header. Stored in VS Code settings."
+                },
+                "activityTracker.autoUpload.intervalMinutes": {
+                    "type": "number",
+                    "default": 30,
+                    "minimum": 5,
+                    "description": "How often to upload while VS Code is open."
+                },
+                "activityTracker.autoUpload.includePerFile": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include per-file rows in the CSV payload."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "package": "vsce package"
+    },
+    "devDependencies": {
+        "@types/node": "^20.19.11",
+        "@types/vscode": "^1.85.0",
+        "@vscode/vsce": "^3.6.0",
+        "typescript": "^5.4.0",
+        "vsce": "^2.15.0"
+    }
+}
