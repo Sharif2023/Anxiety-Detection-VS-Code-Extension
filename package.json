@@ -1,115 +1,112 @@
 {
-    "name": "vscode-activity-tracker",
-    "displayName": "Activity Tracker",
-    "description": "Counts keystrokes and detects idle time while coding (local only).",
-    "version": "0.0.1",
+    "name": "anxiety-detection-intervention",
+    "displayName": "Real-Time Anxiety Detection and Intervention System",
+    "description": "A comprehensive VS Code extension that detects programmer anxiety through behavioral analysis and provides adaptive interventions to improve mental health and productivity.",
+    "version": "1.0.0",
     "engines": {
         "vscode": "^1.85.0"
     },
     "categories": [
-        "Other"
+        "Other",
+        "Machine Learning",
+        "Productivity"
     ],
     "activationEvents": [
         "onStartupFinished",
-        "onCommand:activityTracker.showStats",
-        "onCommand:activityTracker.resetToday",
-        "onCommand:activityTracker.exportTodayJSON",
-        "onCommand:activityTracker.exportTodayCSV",
-        "onCommand:activityTracker.trackUndo",
-        "onCommand:activityTracker.trackRedo",
-        "onCommand:activityTracker.trackCompile"
+        "onCommand:anxietyTracker.showDashboard",
+        "onCommand:anxietyTracker.showInterventions",
+        "onCommand:anxietyTracker.exportData",
+        "onCommand:anxietyTracker.resetSession",
+        "onCommand:anxietyTracker.toggleInterventions"
     ],
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
             {
-                "command": "activityTracker.showStats",
-                "title": "Activity Tracker: Show Today’s Stats"
+                "command": "anxietyTracker.showDashboard",
+                "title": "Anxiety Tracker: Show Dashboard",
+                "icon": "$(graph)"
             },
             {
-                "command": "activityTracker.resetToday",
-                "title": "Activity Tracker: Reset Today"
+                "command": "anxietyTracker.showInterventions",
+                "title": "Anxiety Tracker: View Interventions",
+                "icon": "$(lightbulb)"
             },
             {
-                "command": "activityTracker.exportTodayJSON",
-                "title": "Activity Tracker: Export Today (JSON)"
+                "command": "anxietyTracker.exportData",
+                "title": "Anxiety Tracker: Export Data",
+                "icon": "$(download)"
             },
             {
-                "command": "activityTracker.exportTodayCSV",
-                "title": "Activity Tracker: Export Today (CSV)"
+                "command": "anxietyTracker.resetSession",
+                "title": "Anxiety Tracker: Reset Session",
+                "icon": "$(refresh)"
             },
             {
-                "command": "activityTracker.uploadNow",
-                "title": "Activity Tracker: Upload CSV Now"
+                "command": "anxietyTracker.toggleInterventions",
+                "title": "Anxiety Tracker: Toggle Interventions",
+                "icon": "$(toggle-on)"
             }
         ],
         "keybindings": [
             {
-                "command": "activityTracker.trackUndo",
-                "key": "ctrl+z",
-                "when": "editorTextFocus && !inDebugRepl"
-            },
-            {
-                "command": "activityTracker.trackUndo",
-                "key": "cmd+z",
-                "when": "isMac && editorTextFocus && !inDebugRepl"
-            },
-            {
-                "command": "activityTracker.trackRedo",
-                "key": "ctrl+y",
-                "when": "editorTextFocus && !inDebugRepl"
-            },
-            {
-                "command": "activityTracker.trackRedo",
-                "key": "cmd+shift+z",
-                "when": "isMac && editorTextFocus && !inDebugRepl"
-            },
-            {
-                "command": "activityTracker.trackCompile",
-                "key": "ctrl+shift+b",
+                "command": "anxietyTracker.showDashboard",
+                "key": "ctrl+shift+a",
                 "when": "editorTextFocus"
             },
             {
-                "command": "activityTracker.trackCompile",
-                "key": "cmd+shift+b",
+                "command": "anxietyTracker.showDashboard",
+                "key": "cmd+shift+a",
                 "when": "isMac && editorTextFocus"
             }
         ],
         "configuration": {
             "type": "object",
-            "title": "Activity Tracker",
+            "title": "Anxiety Detection and Intervention",
             "properties": {
-                "activityTracker.idleMs": {
+                "anxietyTracker.idleMs": {
                     "type": "number",
                     "default": 60000,
                     "minimum": 5000,
                     "description": "How long (ms) without activity counts as idle."
                 },
-                "activityTracker.autoUpload.enabled": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Automatically upload today's CSV to a server."
-                },
-                "activityTracker.autoUpload.endpoint": {
-                    "type": "string",
-                    "default": "",
-                    "description": "HTTPS endpoint to POST the CSV to (e.g., https://yourdomain.com/upload)."
-                },
-                "activityTracker.autoUpload.authToken": {
-                    "type": "string",
-                    "default": "",
-                    "markdownDescription": "Optional bearer token for Authorization header. Stored in VS Code settings."
-                },
-                "activityTracker.autoUpload.intervalMinutes": {
-                    "type": "number",
-                    "default": 30,
-                    "minimum": 5,
-                    "description": "How often to upload while VS Code is open."
-                },
-                "activityTracker.autoUpload.includePerFile": {
+                "anxietyTracker.interventions.enabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Include per-file rows in the CSV payload."
+                    "description": "Enable adaptive interventions and reminders."
+                },
+                "anxietyTracker.interventions.sensitivity": {
+                    "type": "string",
+                    "enum": ["low", "medium", "high"],
+                    "default": "medium",
+                    "description": "Sensitivity level for anxiety detection (low = less frequent, high = more frequent interventions)."
+                },
+                "anxietyTracker.ml.modelPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to custom ML model file (leave empty to use built-in model)."
+                },
+                "anxietyTracker.dataCollection.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable data collection for anxiety analysis."
+                },
+                "anxietyTracker.dataCollection.retentionDays": {
+                    "type": "number",
+                    "default": 30,
+                    "minimum": 1,
+                    "description": "Number of days to retain collected data."
+                },
+                "anxietyTracker.dashboard.autoRefresh": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically refresh dashboard data."
+                },
+                "anxietyTracker.dashboard.refreshInterval": {
+                    "type": "number",
+                    "default": 5,
+                    "minimum": 1,
+                    "description": "Dashboard refresh interval in seconds."
                 }
             }
         }
@@ -119,6 +116,10 @@
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "package": "vsce package"
+    },
+    "dependencies": {
+        "ml-matrix": "^6.10.4",
+        "simple-statistics": "^7.8.2"
     },
     "devDependencies": {
         "@types/node": "^20.19.11",
