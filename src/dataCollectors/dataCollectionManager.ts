@@ -39,19 +39,40 @@ export class DataCollectionManager {
     }
 
     async initialize(): Promise<void> {
-        await this.dataManager.initialize();
-        
-        // Initialize all collectors
-        this.keystrokeCollector.initialize();
-        this.activityTracker.initialize();
-        this.fileStatsCollector.initialize();
-        this.errorCollector.initialize();
-        this.codePatternAnalyzer.initialize();
-        this.compileCollector.initialize();
-        this.undoRedoCollector.initialize();
-        this.anxietyAnalyzer.initialize();
+        try {
+            await this.dataManager.initialize();
+            
+            // Initialize all collectors safely
+            if (this.keystrokeCollector && typeof this.keystrokeCollector.initialize === 'function') {
+                this.keystrokeCollector.initialize();
+            }
+            if (this.activityTracker && typeof this.activityTracker.initialize === 'function') {
+                this.activityTracker.initialize();
+            }
+            if (this.fileStatsCollector && typeof this.fileStatsCollector.initialize === 'function') {
+                this.fileStatsCollector.initialize();
+            }
+            if (this.errorCollector && typeof this.errorCollector.initialize === 'function') {
+                this.errorCollector.initialize();
+            }
+            if (this.codePatternAnalyzer && typeof this.codePatternAnalyzer.initialize === 'function') {
+                this.codePatternAnalyzer.initialize();
+            }
+            if (this.compileCollector && typeof this.compileCollector.initialize === 'function') {
+                this.compileCollector.initialize();
+            }
+            if (this.undoRedoCollector && typeof this.undoRedoCollector.initialize === 'function') {
+                this.undoRedoCollector.initialize();
+            }
+            if (this.anxietyAnalyzer && typeof this.anxietyAnalyzer.initialize === 'function') {
+                this.anxietyAnalyzer.initialize();
+            }
 
-        console.log('All data collectors initialized successfully');
+            console.log('All data collectors initialized successfully');
+        } catch (error) {
+            console.error('Error initializing data collectors:', error);
+            vscode.window.showErrorMessage(`Failed to initialize data collectors: ${error}`);
+        }
     }
 
     startCollection(): void {

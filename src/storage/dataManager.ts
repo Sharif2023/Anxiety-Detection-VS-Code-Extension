@@ -403,8 +403,44 @@ export class DataManager {
     }
 
     exportData(): void {
-        // Export functionality can be added here
-        vscode.window.showInformationMessage(`Data exported to: ${this.dataFile}`);
+        if (!this.isInitialized) {
+            vscode.window.showErrorMessage('Data Manager is not initialized. Please wait a moment and try again.');
+            return;
+        }
+
+        // Ensure data is flushed before export
+        this.flushQueue().then(() => {
+            // Show the file in explorer
+            vscode.window.showInformationMessage(
+                `Data file location: ${this.dataFile}`,
+                'Open File',
+                'Open Folder',
+                'Copy Path'
+            ).then(selection => {
+                if (selection === 'Open File') {
+                    const fileUri = vscode.Uri.file(this.dataFile);
+                    vscode.workspace.openTextDocument(fileUri).then(doc => {
+                        vscode.window.showTextDocument(doc);
+                    }).catch(error => {
+                        vscode.window.showErrorMessage(`Failed to open file: ${error.message}`);
+                    });
+                } else if (selection === 'Open Folder') {
+                    const folderPath = path.dirname(this.dataFile);
+                    const folderUri = vscode.Uri.file(folderPath);
+                    vscode.commands.executeCommand('revealFileInOS', folderUri).catch(error => {
+                        // Fallback: show path
+                        vscode.window.showInformationMessage(`Folder path: ${folderPath}`);
+                    });
+                } else if (selection === 'Copy Path') {
+                    vscode.env.clipboard.writeText(this.dataFile).then(() => {
+                        vscode.window.showInformationMessage('File path copied to clipboard');
+                    });
+                }
+            });
+        }).catch(error => {
+            console.error('Failed to flush queue:', error);
+            vscode.window.showErrorMessage(`Failed to export data: ${error instanceof Error ? error.message : String(error)}`);
+        });
     }
 
     cleanup(): void {

@@ -58,6 +58,9 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
     public showDashboard() {
         if (this._view) {
             this._view.show?.(true);
+        } else {
+            // If view doesn't exist yet, try to reveal it
+            vscode.commands.executeCommand('workbench.view.extension.anxiety-detector.dashboard');
         }
     }
 

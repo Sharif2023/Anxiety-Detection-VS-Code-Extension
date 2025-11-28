@@ -27,16 +27,42 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register commands
     context.subscriptions.push(
         vscode.commands.registerCommand('anxiety-detector.showDashboard', () => {
-            dashboardProvider.showDashboard();
+            try {
+                dashboardProvider.showDashboard();
+                // Also try to focus the view
+                vscode.commands.executeCommand('anxiety-detector.dashboard.focus');
+            } catch (error) {
+                console.error('Error showing dashboard:', error);
+                vscode.window.showErrorMessage(`Failed to show dashboard: ${error}`);
+            }
         }),
-        vscode.commands.registerCommand('anxiety-detector.exportData', () => {
-            dataManager.exportData();
+        vscode.commands.registerCommand('anxiety-detector.exportData', async () => {
+            try {
+                if (dataManager && typeof dataManager.exportData === 'function') {
+                    await dataManager.exportData();
+                } else {
+                    vscode.window.showErrorMessage('Data Manager is not properly initialized.');
+                }
+            } catch (error) {
+                console.error('Error exporting data:', error);
+                vscode.window.showErrorMessage(`Failed to export data: ${error}`);
+            }
         }),
         vscode.commands.registerCommand('anxiety-detector.pauseCollection', () => {
-            dataCollectionManager.pauseCollection();
+            try {
+                dataCollectionManager.pauseCollection();
+            } catch (error) {
+                console.error('Error pausing collection:', error);
+                vscode.window.showErrorMessage(`Failed to pause collection: ${error}`);
+            }
         }),
         vscode.commands.registerCommand('anxiety-detector.resumeCollection', () => {
-            dataCollectionManager.resumeCollection();
+            try {
+                dataCollectionManager.resumeCollection();
+            } catch (error) {
+                console.error('Error resuming collection:', error);
+                vscode.window.showErrorMessage(`Failed to resume collection: ${error}`);
+            }
         })
     );
 
