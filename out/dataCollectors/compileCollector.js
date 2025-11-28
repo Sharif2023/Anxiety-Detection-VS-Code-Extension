@@ -34,6 +34,9 @@ class CompileCollector {
         this.compilationAttempts = new Map();
         this.dataManager = dataManager;
     }
+    initialize() {
+        // Initialization logic here
+    }
     /** Start listening to VSCode compilation‑related events */
     start() {
         if (this.isActive)

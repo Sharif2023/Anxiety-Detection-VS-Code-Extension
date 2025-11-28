@@ -40,13 +40,44 @@ async function activate(context) {
     context.subscriptions.push(vscode.window.registerWebviewViewProvider(dashboardProvider_1.DashboardProvider.viewType, dashboardProvider));
     // Register commands
     context.subscriptions.push(vscode.commands.registerCommand('anxiety-detector.showDashboard', () => {
-        dashboardProvider.showDashboard();
-    }), vscode.commands.registerCommand('anxiety-detector.exportData', () => {
-        exports.dataManager.exportData();
+        try {
+            dashboardProvider.showDashboard();
+            // Also try to focus the view
+            vscode.commands.executeCommand('anxiety-detector.dashboard.focus');
+        }
+        catch (error) {
+            console.error('Error showing dashboard:', error);
+            vscode.window.showErrorMessage(`Failed to show dashboard: ${error}`);
+        }
+    }), vscode.commands.registerCommand('anxiety-detector.exportData', async () => {
+        try {
+            if (exports.dataManager && typeof exports.dataManager.exportData === 'function') {
+                await exports.dataManager.exportData();
+            }
+            else {
+                vscode.window.showErrorMessage('Data Manager is not properly initialized.');
+            }
+        }
+        catch (error) {
+            console.error('Error exporting data:', error);
+            vscode.window.showErrorMessage(`Failed to export data: ${error}`);
+        }
     }), vscode.commands.registerCommand('anxiety-detector.pauseCollection', () => {
-        exports.dataCollectionManager.pauseCollection();
+        try {
+            exports.dataCollectionManager.pauseCollection();
+        }
+        catch (error) {
+            console.error('Error pausing collection:', error);
+            vscode.window.showErrorMessage(`Failed to pause collection: ${error}`);
+        }
     }), vscode.commands.registerCommand('anxiety-detector.resumeCollection', () => {
-        exports.dataCollectionManager.resumeCollection();
+        try {
+            exports.dataCollectionManager.resumeCollection();
+        }
+        catch (error) {
+            console.error('Error resuming collection:', error);
+            vscode.window.showErrorMessage(`Failed to resume collection: ${error}`);
+        }
     }));
     // Start data collection
     await exports.dataCollectionManager.initialize();
@@ -68,6 +99,7 @@ function deactivate() {
     }
     if (exports.dataManager) {
         exports.dataManager.saveData();
+        exports.dataManager.cleanup();
     }
     console.log('Programming Anxiety Detector extension has been deactivated');
 }

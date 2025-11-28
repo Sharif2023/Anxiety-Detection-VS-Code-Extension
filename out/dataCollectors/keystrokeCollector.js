@@ -43,13 +43,9 @@ class KeystrokeCollector {
             return;
         }
         this.isActive = true;
-        // Listen to text document changes
+        // Listen to text document changes (primary method for keystroke tracking)
         const textDocumentChangeDisposable = vscode.workspace.onDidChangeTextDocument(this.handleTextDocumentChange.bind(this));
-        // Listen to keyboard events (for key-level tracking)
-        const keyDownDisposable = vscode.commands.registerCommand('type', (args) => {
-            this.handleKeystroke(args);
-        });
-        this.disposables.push(textDocumentChangeDisposable, keyDownDisposable);
+        this.disposables.push(textDocumentChangeDisposable);
     }
     stop() {
         this.isActive = false;
@@ -63,9 +59,22 @@ class KeystrokeCollector {
         }
         const document = event.document;
         const changes = event.contentChanges;
+        const now = Date.now();
+        // Track typing speed metrics
+        if (changes.length > 0) {
+            if (this.lastKeystrokeTime > 0) {
+                this.keystrokeTimestamps.push(now);
+                // Keep only last 100 timestamps for calculation
+                if (this.keystrokeTimestamps.length > 100) {
+                    this.keystrokeTimestamps.shift();
+                }
+            }
+            this.lastKeystrokeTime = now;
+            this.keystrokeCount++;
+        }
         changes.forEach(change => {
             const keystrokeData = {
-                timestamp: Date.now(),
+                timestamp: now,
                 key: this.inferKeystroke(change.text),
                 keyCode: 0,
                 modifiers: [],
@@ -76,21 +85,6 @@ class KeystrokeCollector {
             };
             this.recordKeystroke(keystrokeData);
         });
-    }
-    handleKeystroke(args) {
-        // This provides more detailed keystroke information
-        const now = Date.now();
-        // Calculate typing speed metrics
-        if (this.lastKeystrokeTime > 0) {
-            const timeSinceLastKeystroke = now - this.lastKeystrokeTime;
-            this.keystrokeTimestamps.push(now);
-            // Keep only last 100 timestamps for calculation
-            if (this.keystrokeTimestamps.length > 100) {
-                this.keystrokeTimestamps.shift();
-            }
-        }
-        this.lastKeystrokeTime = now;
-        this.keystrokeCount++;
     }
     inferKeystroke(text) {
         if (text.length === 0) {

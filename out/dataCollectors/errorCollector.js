@@ -34,6 +34,9 @@ class ErrorCollector {
         this.currentErrors = new Map();
         this.dataManager = dataManager;
     }
+    initialize() {
+        // Initialization logic here
+    }
     /** Start listening to VSCode events */
     start() {
         if (this.isActive)

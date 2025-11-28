@@ -28,7 +28,7 @@ export class CompileCollector {
         const taskEnd = vscode.tasks.onDidEndTask(this.handleTaskEnd.bind(this));
 
         // Terminal output (detect compilation commands)
-        const terminalWrite = vscode.window.onDidWriteTerminalData(this.handleTerminalWrite.bind(this));
+        const terminalWrite = (vscode.window as any).onDidWriteTerminalData(this.handleTerminalWrite.bind(this));
 
         // Problems panel (diagnostics) changes
         const problemsChange = vscode.languages.onDidChangeDiagnostics(this.handleProblemsChange.bind(this));
@@ -77,7 +77,7 @@ export class CompileCollector {
     }
 
     /** Terminal write handler – detect compilation commands */
-    private handleTerminalWrite(event: vscode.TerminalDataWriteEvent): void {
+    private handleTerminalWrite(event: any): void {
         const data = event.data.toString().toLowerCase();
         const compilationCommands = ['gcc', 'g++', 'javac', 'python', 'node', 'tsc', 'go build', 'cargo build', 'dotnet build'];
         const isCompilationCommand = compilationCommands.some(cmd => data.includes(cmd));

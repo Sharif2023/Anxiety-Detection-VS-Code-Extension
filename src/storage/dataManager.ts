@@ -57,7 +57,7 @@ export class DataManager {
         return {
             sessionId: this.generateSessionId(),
             startTime: Date.now(),
-            vscodeVersion: vscode.version,
+            vscodeVersion: vscode.version || 'unknown',
             extensionVersion: '1.0.0',
             workspace: this.getWorkspaceName(),
             keystrokes: [],
@@ -87,7 +87,7 @@ export class DataManager {
 
     private getWorkspaceName(): string {
         const workspaceFolders = vscode.workspace.workspaceFolders;
-        return workspaceFolders && workspaceFolders.length > 0 ? workspaceFolders[0].name : 'no-workspace';
+        return workspaceFolders && workspaceFolders.length > 0 ? (workspaceFolders[0].name || 'no-workspace') : 'no-workspace';
     }
 
     private getDataFilePath(): string {
@@ -419,15 +419,15 @@ export class DataManager {
             ).then(selection => {
                 if (selection === 'Open File') {
                     const fileUri = vscode.Uri.file(this.dataFile);
-                    vscode.workspace.openTextDocument(fileUri).then(doc => {
+                    Promise.resolve(vscode.workspace.openTextDocument(fileUri)).then(doc => {
                         vscode.window.showTextDocument(doc);
-                    }).catch(error => {
+                    }).catch((error: any) => {
                         vscode.window.showErrorMessage(`Failed to open file: ${error.message}`);
                     });
                 } else if (selection === 'Open Folder') {
                     const folderPath = path.dirname(this.dataFile);
                     const folderUri = vscode.Uri.file(folderPath);
-                    vscode.commands.executeCommand('revealFileInOS', folderUri).catch(error => {
+                    Promise.resolve(vscode.commands.executeCommand('revealFileInOS', folderUri)).catch((error: any) => {
                         // Fallback: show path
                         vscode.window.showInformationMessage(`Folder path: ${folderPath}`);
                     });
