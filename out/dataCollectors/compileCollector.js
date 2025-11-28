@@ -24,35 +24,39 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompileCollector = void 0;
+// CompileCollector for Programming Anxiety Detector Extension
 const vscode = __importStar(require("vscode"));
 class CompileCollector {
     constructor(dataManager) {
-        this.dataManager = dataManager;
         this.isActive = false;
         this.disposables = [];
-        this.compilationAttempts = new Map();
         this.currentCompilationStart = 0;
+        this.compilationAttempts = new Map();
+        this.dataManager = dataManager;
     }
-    initialize() {
-        // Initialization logic here
-    }
+    /** Start listening to VSCode compilation‑related events */
     start() {
-        if (this.isActive) {
+        if (this.isActive)
             return;
-        }
         this.isActive = true;
-        // Listen to task executions (build tasks)
+        // Task (build) events
         const taskStart = vscode.tasks.onDidStartTask(this.handleTaskStart.bind(this));
         const taskEnd = vscode.tasks.onDidEndTask(this.handleTaskEnd.bind(this));
-        // Listen to problems panel changes
+        // Terminal output (detect compilation commands)
+        const terminalWrite = vscode.window.onDidWriteTerminalData(this.handleTerminalWrite.bind(this));
+        // Problems panel (diagnostics) changes
         const problemsChange = vscode.languages.onDidChangeDiagnostics(this.handleProblemsChange.bind(this));
-        this.disposables.push(taskStart, taskEnd, problemsChange);
+        this.disposables.push(taskStart, taskEnd, terminalWrite, problemsChange);
     }
+    /** Stop listening and clean up */
     stop() {
+        if (!this.isActive)
+            return;
         this.isActive = false;
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach(d => d.dispose());
         this.disposables = [];
     }
+    /** Task start handler – detect compilation tasks */
     handleTaskStart(event) {
         const task = event.execution.task;
         if (this.isCompilationTask(task)) {
@@ -60,6 +64,7 @@ class CompileCollector {
             console.log('Compilation task started:', task.name);
         }
     }
+    /** Task end handler – record compilation result */
     handleTaskEnd(event) {
         const task = event.execution.task;
         if (this.isCompilationTask(task)) {
@@ -69,8 +74,8 @@ class CompileCollector {
                 timestamp: this.currentCompilationStart,
                 filePath: this.getCurrentFile(),
                 language: this.getCurrentLanguage(),
-                success: success,
-                duration: duration,
+                success,
+                duration,
                 errors: this.getCompilationErrors(),
                 output: '',
                 attemptNumber: this.getNextAttemptNumber()
@@ -79,9 +84,9 @@ class CompileCollector {
             console.log('Compilation completed:', { success, duration });
         }
     }
+    /** Terminal write handler – detect compilation commands */
     handleTerminalWrite(event) {
         const data = event.data.toString().toLowerCase();
-        // Detect compilation commands in terminal
         const compilationCommands = ['gcc', 'g++', 'javac', 'python', 'node', 'tsc', 'go build', 'cargo build', 'dotnet build'];
         const isCompilationCommand = compilationCommands.some(cmd => data.includes(cmd));
         if (isCompilationCommand) {
@@ -89,38 +94,37 @@ class CompileCollector {
             console.log('Detected compilation command in terminal');
         }
     }
+    /** Problems panel change – capture compilation errors */
     handleProblemsChange(event) {
-        // Track compilation errors from problems panel
         event.uris.forEach(uri => {
             const diagnostics = vscode.languages.getDiagnostics(uri);
-            const compilationErrors = diagnostics.filter(d => d.severity === vscode.DiagnosticSeverity.Error &&
-                this.isCompilationError(d.source));
+            const compilationErrors = diagnostics.filter(d => d.severity === vscode.DiagnosticSeverity.Error && this.isCompilationError(d.source));
             if (compilationErrors.length > 0) {
                 console.log('Compilation errors detected:', compilationErrors.length);
             }
         });
     }
+    /** Helper – determine if a VSCode task is a compilation task */
     isCompilationTask(task) {
-        const taskName = task.name.toLowerCase();
-        const compilationKeywords = ['build', 'compile', 'make', 'run', 'test'];
-        return compilationKeywords.some(keyword => taskName.includes(keyword));
+        const name = task.name.toLowerCase();
+        const keywords = ['build', 'compile', 'make', 'run', 'test'];
+        return keywords.some(k => name.includes(k));
     }
+    /** Helper – check if compilation succeeded (no compilation‑related errors) */
     didCompilationSucceed() {
-        // Check if there are any compilation errors in the problems panel
         const allDiagnostics = [];
         vscode.workspace.textDocuments.forEach(doc => {
-            const diagnostics = vscode.languages.getDiagnostics(doc.uri);
-            allDiagnostics.push(...diagnostics);
+            allDiagnostics.push(...vscode.languages.getDiagnostics(doc.uri));
         });
-        const hasErrors = allDiagnostics.some(d => d.severity === vscode.DiagnosticSeverity.Error &&
-            this.isCompilationError(d.source));
+        const hasErrors = allDiagnostics.some(d => d.severity === vscode.DiagnosticSeverity.Error && this.isCompilationError(d.source));
         return !hasErrors;
     }
+    /** Helper – determine if a diagnostic source is a compilation source */
     isCompilationError(source) {
         if (!source)
             return false;
-        const compilationSources = ['typescript', 'javascript', 'python', 'java', 'c++', 'c#', 'go', 'rust'];
-        return compilationSources.some(s => source.toLowerCase().includes(s));
+        const sources = ['typescript', 'javascript', 'python', 'java', 'c++', 'c#', 'go', 'rust'];
+        return sources.some(s => source.toLowerCase().includes(s));
     }
     getCurrentFile() {
         const editor = vscode.window.activeTextEditor;
@@ -149,13 +153,13 @@ class CompileCollector {
         this.compilationAttempts.set(key, next);
         return next;
     }
+    /** Optional: expose compile metrics for dashboard */
     getCompileMetrics() {
-        const today = new Date().toDateString();
-        const todayAttempts = Array.from(this.compilationAttempts.values()).reduce((sum, count) => sum + count, 0);
+        const totalAttempts = Array.from(this.compilationAttempts.values()).reduce((s, c) => s + c, 0);
         return {
-            totalCompilationAttempts: todayAttempts,
-            filesCompiledToday: this.compilationAttempts.size,
-            currentFileAttempts: this.compilationAttempts.get(this.getCurrentFile()) || 0
+            totalCompilationAttempts: totalAttempts,
+            filesCompiled: this.compilationAttempts.size,
+            attemptsForCurrentFile: this.compilationAttempts.get(this.getCurrentFile()) || 0
         };
     }
 }

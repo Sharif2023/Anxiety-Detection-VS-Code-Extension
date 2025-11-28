@@ -24,37 +24,35 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ErrorCollector = void 0;
+// ErrorCollector for Programming Anxiety Detector Extension
 const vscode = __importStar(require("vscode"));
 class ErrorCollector {
     constructor(dataManager) {
-        this.dataManager = dataManager;
         this.isActive = false;
         this.disposables = [];
         this.errorCount = 0;
         this.currentErrors = new Map();
+        this.dataManager = dataManager;
     }
-    initialize() {
-        // Initialization logic here
-    }
+    /** Start listening to VSCode events */
     start() {
-        if (this.isActive) {
+        if (this.isActive)
             return;
-        }
         this.isActive = true;
-        // Listen to problems panel changes
-        const problemsChange = vscode.languages.onDidChangeDiagnostics(this.handleProblemsChange.bind(this));
-        // Listen to terminal for runtime errors
-        const terminalWrite = vscode.window.onDidWriteTerminalData(this.handleTerminalWrite.bind(this));
-        // Listen to debug session events
+        const diagChange = vscode.languages.onDidChangeDiagnostics(this.handleProblemsChange.bind(this));
         const debugStart = vscode.debug.onDidStartDebugSession(this.handleDebugStart.bind(this));
         const debugStop = vscode.debug.onDidTerminateDebugSession(this.handleDebugStop.bind(this));
-        this.disposables.push(problemsChange, debugStart, debugStop);
+        this.disposables.push(diagChange, debugStart, debugStop);
     }
+    /** Stop listening and clean up */
     stop() {
+        if (!this.isActive)
+            return;
         this.isActive = false;
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach(d => d.dispose());
         this.disposables = [];
     }
+    /** Handle diagnostics (problems panel) changes */
     handleProblemsChange(event) {
         event.uris.forEach(uri => {
             const diagnostics = vscode.languages.getDiagnostics(uri);
@@ -63,10 +61,10 @@ class ErrorCollector {
                     this.recordError(uri, diagnostic);
                 }
             });
-            // Check for resolved errors
             this.checkResolvedErrors(uri, diagnostics);
         });
     }
+    /** Record a new error if not already tracked */
     recordError(uri, diagnostic) {
         const errorKey = `${uri.fsPath}:${diagnostic.range.start.line}:${diagnostic.range.start.character}`;
         if (!this.currentErrors.has(errorKey)) {
@@ -77,7 +75,7 @@ class ErrorCollector {
                 severity: 'error',
                 lineNumber: diagnostic.range.start.line + 1,
                 isCompilationError: this.isCompilationError(diagnostic),
-                resolved: false
+                resolved: false,
             };
             this.currentErrors.set(errorKey, errorData);
             this.dataManager.addError(errorData);
@@ -85,12 +83,12 @@ class ErrorCollector {
             console.log('New error recorded:', errorData);
         }
     }
+    /** Detect errors that have been resolved */
     checkResolvedErrors(uri, currentDiagnostics) {
         const currentErrorKeys = new Set(currentDiagnostics
             .filter(d => d.severity === vscode.DiagnosticSeverity.Error)
             .map(d => `${uri.fsPath}:${d.range.start.line}:${d.range.start.character}`));
-        // Find errors that are no longer in diagnostics (resolved)
-        Array.from(this.currentErrors.keys()).forEach(errorKey => {
+        for (const errorKey of this.currentErrors.keys()) {
             if (errorKey.startsWith(uri.fsPath) && !currentErrorKeys.has(errorKey)) {
                 const error = this.currentErrors.get(errorKey);
                 if (error && !error.resolved) {
@@ -101,37 +99,39 @@ class ErrorCollector {
                     console.log('Error resolved:', error);
                 }
             }
-        });
+        }
     }
     handleDebugStart(session) {
         console.log('Debug session started:', session.name);
+        // Potentially record a compilation start event here
     }
     handleDebugStop(session) {
         console.log('Debug session ended:', session.name);
+        // Potentially record a compilation end event here
     }
     isCompilationError(diagnostic) {
-        const compilationSources = ['typescript', 'tsc', 'eslint', 'compiler'];
+        const sources = ['typescript', 'tsc', 'eslint', 'compiler'];
         const source = diagnostic.source ? diagnostic.source.toLowerCase() : '';
-        return compilationSources.some(compSource => source.includes(compSource));
+        return sources.some(s => source.includes(s));
     }
+    /** Metrics helpers */
     getErrorMetrics() {
         const now = Date.now();
-        const unresolvedErrors = Array.from(this.currentErrors.values()).filter(e => !e.resolved);
-        const recentErrors = Array.from(this.currentErrors.values()).filter(e => now - e.timestamp < 300000 // Last 5 minutes
-        );
+        const unresolved = Array.from(this.currentErrors.values()).filter(e => !e.resolved);
+        const recent = Array.from(this.currentErrors.values()).filter(e => now - e.timestamp < 300000);
         const resolutionTimes = Array.from(this.currentErrors.values())
             .filter(e => e.resolved && e.resolutionTime)
             .map(e => e.resolutionTime);
-        const averageResolutionTime = resolutionTimes.length > 0
+        const avgResolution = resolutionTimes.length > 0
             ? resolutionTimes.reduce((a, b) => a + b, 0) / resolutionTimes.length
             : 0;
         return {
             totalErrors: this.errorCount,
-            unresolvedErrors: unresolvedErrors.length,
-            recentErrors: recentErrors.length,
-            averageResolutionTime: averageResolutionTime,
-            errorRatePerMinute: this.calculateErrorRate(recentErrors),
-            filesWithErrors: new Set(unresolvedErrors.map(e => e.filePath)).size
+            unresolvedErrors: unresolved.length,
+            recentErrors: recent.length,
+            averageResolutionTime: avgResolution,
+            errorRatePerMinute: this.calculateErrorRate(recent),
+            filesWithErrors: new Set(unresolved.map(e => e.filePath)).size,
         };
     }
     calculateErrorRate(errors) {
@@ -141,21 +141,19 @@ class ErrorCollector {
         return timeSpan > 0 ? errors.length / timeSpan : errors.length;
     }
     getErrorPatterns() {
-        const unresolvedErrors = Array.from(this.currentErrors.values()).filter(e => !e.resolved);
+        const unresolved = Array.from(this.currentErrors.values()).filter(e => !e.resolved);
         return {
-            consecutiveErrors: this.detectConsecutiveErrors(unresolvedErrors),
-            errorClusters: this.detectErrorClusters(unresolvedErrors),
-            persistentErrors: this.detectPersistentErrors(unresolvedErrors)
+            consecutiveErrors: this.detectConsecutiveErrors(unresolved),
+            errorClusters: this.detectErrorClusters(unresolved),
+            persistentErrors: this.detectPersistentErrors(unresolved),
         };
     }
     detectConsecutiveErrors(errors) {
-        // Group errors by file and check for consecutive line numbers
         const fileGroups = new Map();
-        errors.forEach(error => {
-            if (!fileGroups.has(error.filePath)) {
-                fileGroups.set(error.filePath, []);
-            }
-            fileGroups.get(error.filePath).push(error.lineNumber);
+        errors.forEach(err => {
+            if (!fileGroups.has(err.filePath))
+                fileGroups.set(err.filePath, []);
+            fileGroups.get(err.filePath).push(err.lineNumber);
         });
         let maxConsecutive = 0;
         fileGroups.forEach(lines => {
@@ -174,16 +172,15 @@ class ErrorCollector {
         return maxConsecutive;
     }
     detectErrorClusters(errors) {
-        // Count files with multiple errors
-        const errorCounts = new Map();
-        errors.forEach(error => {
-            errorCounts.set(error.filePath, (errorCounts.get(error.filePath) || 0) + 1);
+        const counts = new Map();
+        errors.forEach(err => {
+            counts.set(err.filePath, (counts.get(err.filePath) || 0) + 1);
         });
-        return Array.from(errorCounts.values()).filter(count => count >= 3).length;
+        return Array.from(counts.values()).filter(c => c >= 3).length;
     }
     detectPersistentErrors(errors) {
         const now = Date.now();
-        return errors.filter(error => now - error.timestamp > 600000).length; // Errors older than 10 minutes
+        return errors.filter(e => now - e.timestamp > 600000).length; // >10 minutes
     }
 }
 exports.ErrorCollector = ErrorCollector;
