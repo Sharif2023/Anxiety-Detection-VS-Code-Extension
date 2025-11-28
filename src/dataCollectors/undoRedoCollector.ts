@@ -33,21 +33,21 @@ export class UndoRedoCollector {
 
         this.isActive = true;
 
-        // Track undo/redo commands
-        const undoCommand = vscode.commands.registerCommand('undo', () => {
-            this.handleUndo();
-        });
-
-        const redoCommand = vscode.commands.registerCommand('redo', () => {
-            this.handleRedo();
-        });
-
-        // Also track through text document changes to detect undo/redo patterns
+        // Track undo/redo through document changes and command execution
+        // Note: We can't directly intercept undo/redo commands, so we track through document changes
         const textDocumentChange = vscode.workspace.onDidChangeTextDocument(
             this.handleTextDocumentChange.bind(this)
         );
 
-        this.disposables.push(undoCommand, redoCommand, textDocumentChange);
+        // Track when undo/redo might occur by monitoring document state changes
+        const editorChange = vscode.window.onDidChangeActiveTextEditor(
+            () => {
+                // Reset tracking when editor changes
+                this.lastActionTime = Date.now();
+            }
+        );
+
+        this.disposables.push(textDocumentChange, editorChange);
     }
 
     stop(): void {
@@ -56,60 +56,57 @@ export class UndoRedoCollector {
         this.disposables = [];
     }
 
-    private handleUndo(): void {
-        const now = Date.now();
-        const editor = vscode.window.activeTextEditor;
-
-        const undoData: UndoRedoData = {
-            timestamp: now,
-            type: 'undo',
-            filePath: editor ? editor.document.fileName : 'unknown',
-            language: editor ? editor.document.languageId : 'unknown',
-            changesCount: 1,
-            durationSinceLastAction: this.lastActionTime > 0 ? now - this.lastActionTime : 0
-        };
-
-        this.undoCount++;
-        this.undoStack.push(undoData);
-        this.dataManager.addUndoRedo(undoData);
-        this.lastActionTime = now;
-
-        console.log('Undo action recorded');
-    }
-
-    private handleRedo(): void {
-        const now = Date.now();
-        const editor = vscode.window.activeTextEditor;
-
-        const redoData: UndoRedoData = {
-            timestamp: now,
-            type: 'redo',
-            filePath: editor ? editor.document.fileName : 'unknown',
-            language: editor ? editor.document.languageId : 'unknown',
-            changesCount: 1,
-            durationSinceLastAction: this.lastActionTime > 0 ? now - this.lastActionTime : 0
-        };
-
-        this.redoCount++;
-        this.redoStack.push(redoData);
-        this.dataManager.addUndoRedo(redoData);
-        this.lastActionTime = now;
-
-        console.log('Redo action recorded');
-    }
 
     private handleTextDocumentChange(event: vscode.TextDocumentChangeEvent): void {
         // Detect undo/redo patterns based on change characteristics
         const changes = event.contentChanges;
         if (changes.length === 0) return;
 
-        // Simple heuristic: multiple changes at once might indicate undo/redo
-        if (changes.length > 1) {
-            // Could be an undo/redo operation
-            console.log('Multiple changes detected, possible undo/redo:', changes.length);
+        const now = Date.now();
+        const editor = vscode.window.activeTextEditor;
+        
+        // Heuristic: Large deletions or multiple simultaneous changes might indicate undo
+        // We track this as potential undo/redo activity
+        let totalDeleted = 0;
+        let totalAdded = 0;
+        
+        changes.forEach(change => {
+            const deletedLength = change.rangeLength || 0;
+            const addedLength = change.text.length;
+            totalDeleted += deletedLength;
+            totalAdded += addedLength;
+        });
+
+        // If we're deleting more than adding significantly, might be undo
+        if (totalDeleted > totalAdded * 2 && totalDeleted > 10) {
+            const undoData: UndoRedoData = {
+                timestamp: now,
+                type: 'undo',
+                filePath: editor ? editor.document.fileName : 'unknown',
+                language: editor ? editor.document.languageId : 'unknown',
+                changesCount: changes.length,
+                durationSinceLastAction: this.lastActionTime > 0 ? now - this.lastActionTime : 0
+            };
+            this.undoCount++;
+            this.undoStack.push(undoData);
+            this.dataManager.addUndoRedo(undoData);
+        }
+        // If we're adding back what was deleted, might be redo
+        else if (totalAdded > totalDeleted * 2 && totalAdded > 10) {
+            const redoData: UndoRedoData = {
+                timestamp: now,
+                type: 'redo',
+                filePath: editor ? editor.document.fileName : 'unknown',
+                language: editor ? editor.document.languageId : 'unknown',
+                changesCount: changes.length,
+                durationSinceLastAction: this.lastActionTime > 0 ? now - this.lastActionTime : 0
+            };
+            this.redoCount++;
+            this.redoStack.push(redoData);
+            this.dataManager.addUndoRedo(redoData);
         }
 
-        this.lastActionTime = Date.now();
+        this.lastActionTime = now;
     }
 
     getUndoRedoMetrics(): any {

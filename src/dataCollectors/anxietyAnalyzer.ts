@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import { DataManager } from '../storage/dataManager';
 import { AnxietyMetrics } from '../models/dataModels';
 
@@ -244,8 +245,8 @@ export class AnxietyAnalyzer {
     }
 
     private getCurrentFile(): string {
-        // This would get the current active file
-        return 'current_file.py'; // Placeholder
+        const editor = vscode.window.activeTextEditor;
+        return editor ? editor.document.fileName : 'unknown';
     }
 
     getCurrentAnxietyScore(): number {

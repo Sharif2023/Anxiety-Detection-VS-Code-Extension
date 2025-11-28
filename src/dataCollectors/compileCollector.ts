@@ -14,6 +14,10 @@ export class CompileCollector {
         this.dataManager = dataManager;
     }
 
+    initialize(): void {
+        // Initialization logic here
+    }
+
     /** Start listening to VSCode compilation‑related events */
     start(): void {
         if (this.isActive) return;

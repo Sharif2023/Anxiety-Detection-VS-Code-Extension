@@ -64,6 +64,7 @@ export function deactivate() {
     }
     if (dataManager) {
         dataManager.saveData();
+        dataManager.cleanup();
     }
     console.log('Programming Anxiety Detector extension has been deactivated');
 }

@@ -14,6 +14,10 @@ export class ErrorCollector {
         this.dataManager = dataManager;
     }
 
+    initialize(): void {
+        // Initialization logic here
+    }
+
     /** Start listening to VSCode events */
     start(): void {
         if (this.isActive) return;
