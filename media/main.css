@@ -1,0 +1,215 @@
+.dashboard {
+    padding: 15px;
+    font-family: var(--vscode-font-family);
+    color: var(--vscode-foreground);
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    padding-bottom: 10px;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.controls button {
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.controls button:hover {
+    background: var(--vscode-button-hoverBackground);
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.toggle input[type="checkbox"] {
+    display: none;
+}
+
+.slider {
+    width: 36px;
+    height: 20px;
+    background: var(--vscode-input-background);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+.slider:before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: var(--vscode-foreground);
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: 0.3s;
+}
+
+input[type="checkbox"]:checked + .slider {
+    background: var(--vscode-button-background);
+}
+
+input[type="checkbox"]:checked + .slider:before {
+    transform: translateX(16px);
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.metric-card {
+    background: var(--vscode-panel-background);
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.metric-card h3 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--vscode-descriptionForeground);
+}
+
+.metric-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.metric-row:last-child {
+    margin-bottom: 0;
+}
+
+.metric-row span:first-child {
+    color: var(--vscode-descriptionForeground);
+}
+
+.metric-row span:last-child {
+    font-weight: 600;
+    color: var(--vscode-foreground);
+}
+
+.anxiety-level {
+    text-align: center;
+}
+
+.gauge {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+}
+
+.gauge-value {
+    font-size: 24px;
+    font-weight: bold;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.gauge-label {
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground);
+    margin-top: 8px;
+}
+
+.timeline, .chart {
+    height: 100px;
+    background: var(--vscode-input-background);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vscode-descriptionForeground);
+    font-size: 12px;
+}
+
+.session-info {
+    background: var(--vscode-panel-background);
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.session-info h3 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+.info-item label {
+    color: var(--vscode-descriptionForeground);
+}
+
+.info-item span {
+    font-weight: 600;
+}
+
+.anxiety-low { color: var(--vscode-testing-iconPassed); }
+.anxiety-medium { color: var(--vscode-testing-iconQueued); }
+.anxiety-high { color: var(--vscode-testing-iconFailed); }
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--vscode-input-background);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--vscode-progressBar-background);
+    transition: width 0.3s ease;
+}

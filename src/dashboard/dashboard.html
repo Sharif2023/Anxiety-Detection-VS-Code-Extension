@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programming Anxiety Dashboard</title>
+    <style>
+        :root {
+            --vscode-font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'Ubuntu', 'Droid Sans', sans-serif;
+            --vscode-font-size: 13px;
+            --vscode-font-weight: normal;
+            --vscode-foreground: #cccccc;
+            --vscode-descriptionForeground: #969696;
+            --vscode-panel-background: #1e1e1e;
+            --vscode-panel-border: #3c3c3c;
+            --vscode-input-background: #3c3c3c;
+            --vscode-input-border: #3c3c3c;
+            --vscode-button-background: #0e639c;
+            --vscode-button-foreground: #ffffff;
+            --vscode-button-hoverBackground: #1177bb;
+            --vscode-progressBar-background: #0e639c;
+            --vscode-testing-iconPassed: #89d185;
+            --vscode-testing-iconQueued: #cca700;
+            --vscode-testing-iconFailed: #f48771;
+            --vscode-focusBorder: #007fd4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--vscode-font-family);
+            font-size: var(--vscode-font-size);
+            font-weight: var(--vscode-font-weight);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-panel-background);
+            line-height: 1.4;
+        }
+
+        .dashboard {
+            padding: 15px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--vscode-panel-border);
+            padding-bottom: 15px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--vscode-input-background);
+            transition: .3s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--vscode-foreground);
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--vscode-button-background);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: var(--vscode-panel-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 5px;
+            padding: 16px;
+            transition: transform 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .metric-card h3 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .metric-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .metric-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .metric-label {
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: var(--vscode-foreground);
+        }
+
+        /* Anxiety Level Gauge */
+        .anxiety-level {
+            text-align: center;
+            position: relative;
+        }
+
+        .gauge-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 10px;
+        }
+
+        .gauge {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gauge-background {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--vscode-testing-iconPassed) 0% 33%,
+                var(--vscode-testing-iconQueued) 33% 66%,
+                var(--vscode-testing-iconFailed) 66% 100%
+            );
+            opacity: 0.2;
+        }
+
+        .gauge-fill {
+            position: absolute;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            border-radius: 50%;
+            background: var(--vscode-panel-background);
+        }
+
+        .gauge-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .gauge-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .anxiety-low { color: var(--vscode-testing-iconPassed); }
+        .anxiety-medium { color: var(--vscode-testing-iconQueued); }
+        .anxiety-high { color: var(--vscode-testing-iconFailed); }
+
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--vscode-input-background);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--vscode-progressBar-background);
+            transition: width 0.3s ease;
+        }
+
+        /* Charts and Timelines */
+        .chart-container {
+            height: 120px;
+            background: var(--vscode-input-background);
+            border-radius: 3px;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timeline {
+            height: 80px;
+            background: var(--vscode-input-background);
+            border-radius: 3px;
+            margin-top: 10px;
+            padding: 10px;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .timeline-bar {
+            flex: 1;
+            background: var(--vscode-button-background);
+            border-radius: 2px 2px 0 0;
+            min-height: 1px;
+            transition: height 0.3s ease;
+        }
+
+        /* Session Info */
+        .session-info {
+            background: var(--vscode-panel-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 5px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .session-info h3 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .info-label {
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: var(--vscode-foreground);
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-active {
+            background: var(--vscode-testing-iconPassed);
+        }
+
+        .status-inactive {
+            background: var(--vscode-testing-iconFailed);
+        }
+
+        .status-warning {
+            background: var(--vscode-testing-iconQueued);
+        }
+
+        /* Insights Panel */
+        .insights-panel {
+            background: var(--vscode-input-background);
+            border-radius: 5px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .insights-panel h3 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .insight-item {
+            background: var(--vscode-panel-background);
+            border-radius: 3px;
+            padding: 10px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            border-left: 3px solid var(--vscode-button-background);
+        }
+
+        .insight-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--vscode-input-background);
+            color: var(--vscode-foreground);
+            padding: 6px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* Loading States */
+        .loading {
+            color: var(--vscode-descriptionForeground);
+            font-style: italic;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--vscode-input-background) 25%, var(--vscode-panel-border) 50%, var(--vscode-input-background) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 3px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <header class="dashboard-header">
+            <h1>Programming Anxiety Detector</h1>
+            <div class="controls">
+                <div class="toggle-container">
+                    <label class="toggle">
+                        <input type="checkbox" id="collectionToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span>Data Collection</span>
+                </div>
+                <button class="btn" id="exportBtn">Export Data</button>
+                <button class="btn" id="refreshBtn">Refresh</button>
+            </div>
+        </header>
+
+        <div class="metrics-grid">
+            <!-- Anxiety Level Card -->
+            <div class="metric-card anxiety-level">
+                <h3>Current Anxiety Level</h3>
+                <div class="gauge-container">
+                    <div class="gauge">
+                        <div class="gauge-background"></div>
+                        <div class="gauge-fill"></div>
+                        <div class="gauge-value" id="anxietyValue">--</div>
+                    </div>
+                </div>
+                <div class="gauge-label" id="anxietyLabel">Calculating...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="anxietyProgress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Keystroke Metrics -->
+            <div class="metric-card">
+                <h3>Keystroke Metrics</h3>
+                <div class="metric-row">
+                    <span class="metric-label">Rate (KPM):</span>
+                    <span class="metric-value" id="keystrokeRate">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Variance:</span>
+                    <span class="metric-value" id="keystrokeVariance">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Backspace %:</span>
+                    <span class="metric-value" id="backspaceRate">--</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="keystrokeProgress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Activity Metrics -->
+            <div class="metric-card">
+                <h3>Activity Metrics</h3>
+                <div class="metric-row">
+                    <span class="metric-label">Active Time:</span>
+                    <span class="metric-value" id="activeTime">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Idle Ratio:</span>
+                    <span class="metric-value" id="idleRatio">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Focus Switches:</span>
+                    <span class="metric-value" id="focusSwitches">--</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="activityProgress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Error Metrics -->
+            <div class="metric-card">
+                <h3>Error Metrics</h3>
+                <div class="metric-row">
+                    <span class="metric-label">Error Frequency:</span>
+                    <span class="metric-value" id="errorFrequency">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Resolution Time:</span>
+                    <span class="metric-value" id="resolutionTime">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Consecutive Errors:</span>
+                    <span class="metric-value" id="consecutiveErrors">--</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="errorProgress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Compilation Metrics -->
+            <div class="metric-card">
+                <h3>Compilation Metrics</h3>
+                <div class="metric-row">
+                    <span class="metric-label">Total Attempts:</span>
+                    <span class="metric-value" id="totalCompilations">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Success Rate:</span>
+                    <span class="metric-value" id="compilationSuccessRate">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Current File Attempts:</span>
+                    <span class="metric-value" id="currentFileAttempts">--</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="compilationProgress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Undo/Redo Metrics -->
+            <div class="metric-card">
+                <h3>Undo/Redo Metrics</h3>
+                <div class="metric-row">
+                    <span class="metric-label">Total Undos:</span>
+                    <span class="metric-value" id="totalUndos">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Total Redos:</span>
+                    <span class="metric-value" id="totalRedos">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Undo/Redo Ratio:</span>
+                    <span class="metric-value" id="undoRedoRatio">--</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="undoRedoProgress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Anxiety Timeline -->
+            <div class="metric-card full-width">
+                <h3>Anxiety Timeline (Last 30 minutes)</h3>
+                <div class="chart-container" id="anxietyTimeline">
+                    <canvas id="anxietyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Activity Timeline -->
+            <div class="metric-card full-width">
+                <h3>Recent Activity Timeline</h3>
+                <div class="timeline" id="activityTimeline">
+                    <!-- Timeline bars will be generated by JavaScript -->
+                    <div class="timeline-bar" style="height: 20%"></div>
+                    <div class="timeline-bar" style="height: 45%"></div>
+                    <div class="timeline-bar" style="height: 30%"></div>
+                    <div class="timeline-bar" style="height: 60%"></div>
+                    <div class="timeline-bar" style="height: 25%"></div>
+                    <div class="timeline-bar" style="height: 75%"></div>
+                    <div class="timeline-bar" style="height: 40%"></div>
+                    <div class="timeline-bar" style="height: 55%"></div>
+                    <div class="timeline-bar" style="height: 35%"></div>
+                    <div class="timeline-bar" style="height: 65%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Information -->
+        <div class="session-info">
+            <h3>Current Session Information</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Session Duration:</span>
+                    <span class="info-value" id="sessionDuration">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Files Opened:</span>
+                    <span class="info-value" id="filesOpened">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Total Keystrokes:</span>
+                    <span class="info-value" id="totalKeystrokes">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Data Confidence:</span>
+                    <span class="info-value" id="dataConfidence">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Current File:</span>
+                    <span class="info-value" id="currentFile">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Collection Status:</span>
+                    <span class="info-value" id="collectionStatus">
+                        <span class="status-indicator status-active"></span>
+                        Active
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights Panel -->
+        <div class="insights-panel">
+            <h3>Anxiety Insights & Recommendations</h3>
+            <div id="insightsContainer">
+                <div class="insight-item">
+                    <strong>Initial Analysis:</strong> Collecting baseline data. Check back in a few minutes for personalized insights.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentMetrics = {};
+        let anxietyHistory = [];
+        const maxHistoryLength = 30;
+
+        // DOM Elements
+        const elements = {
+            anxietyValue: document.getElementById('anxietyValue'),
+            anxietyLabel: document.getElementById('anxietyLabel'),
+            anxietyProgress: document.getElementById('anxietyProgress'),
+            keystrokeRate: document.getElementById('keystrokeRate'),
+            keystrokeVariance: document.getElementById('keystrokeVariance'),
+            backspaceRate: document.getElementById('backspaceRate'),
+            activeTime: document.getElementById('activeTime'),
+            idleRatio: document.getElementById('idleRatio'),
+            focusSwitches: document.getElementById('focusSwitches'),
+            errorFrequency: document.getElementById('errorFrequency'),
+            resolutionTime: document.getElementById('resolutionTime'),
+            consecutiveErrors: document.getElementById('consecutiveErrors'),
+            totalCompilations: document.getElementById('totalCompilations'),
+            compilationSuccessRate: document.getElementById('compilationSuccessRate'),
+            currentFileAttempts: document.getElementById('currentFileAttempts'),
+            totalUndos: document.getElementById('totalUndos'),
+            totalRedos: document.getElementById('totalRedos'),
+            undoRedoRatio: document.getElementById('undoRedoRatio'),
+            sessionDuration: document.getElementById('sessionDuration'),
+            filesOpened: document.getElementById('filesOpened'),
+            totalKeystrokes: document.getElementById('totalKeystrokes'),
+            dataConfidence: document.getElementById('dataConfidence'),
+            currentFile: document.getElementById('currentFile'),
+            collectionStatus: document.getElementById('collectionStatus'),
+            collectionToggle: document.getElementById('collectionToggle'),
+            exportBtn: document.getElementById('exportBtn'),
+            refreshBtn: document.getElementById('refreshBtn'),
+            insightsContainer: document.getElementById('insightsContainer'),
+            activityTimeline: document.getElementById('activityTimeline')
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            requestMetrics();
+            
+            // Set up periodic updates
+            setInterval(requestMetrics, 2000);
+        });
+
+        // Event Listeners
+        function initializeEventListeners() {
+            elements.collectionToggle.addEventListener('change', function(e) {
+                const vscode = acquireVsCodeApi();
+                vscode.postMessage({
+                    type: 'toggleCollection',
+                    value: e.target.checked
+                });
+            });
+
+            elements.exportBtn.addEventListener('click', function() {
+                const vscode = acquireVsCodeApi();
+                vscode.postMessage({
+                    type: 'exportData'
+                });
+            });
+
+            elements.refreshBtn.addEventListener('click', function() {
+                requestMetrics();
+            });
+
+            // Handle messages from extension
+            window.addEventListener('message', function(event) {
+                const message = event.data;
+                
+                switch (message.type) {
+                    case 'currentMetrics':
+                        currentMetrics = message.data;
+                        updateDashboard();
+                        break;
+                    case 'collectionStatus':
+                        updateCollectionStatus(message.active);
+                        break;
+                }
+            });
+        }
+
+        // Request metrics from extension
+        function requestMetrics() {
+            const vscode = acquireVsCodeApi();
+            vscode.postMessage({
+                type: 'getCurrentMetrics'
+            });
+        }
+
+        // Update dashboard with current metrics
+        function updateDashboard() {
+            updateAnxietyGauge();
+            updateKeystrokeMetrics();
+            updateActivityMetrics();
+            updateErrorMetrics();
+            updateCompilationMetrics();
+            updateUndoRedoMetrics();
+            updateSessionInfo();
+            updateInsights();
+            updateActivityTimeline();
+        }
+
+        // Update anxiety gauge
+        function updateAnxietyGauge() {
+            const anxietyScore = currentMetrics.anxietyScore || 0;
+            const percentage = Math.round(anxietyScore * 100);
+            
+            elements.anxietyValue.textContent = `${percentage}%`;
+            elements.anxietyProgress.style.width = `${percentage}%`;
+            
+            // Update label and color
+            let level, colorClass;
+            if (anxietyScore < 0.3) {
+                level = 'Low Anxiety';
+                colorClass = 'anxiety-low';
+            } else if (anxietyScore < 0.7) {
+                level = 'Medium Anxiety';
+                colorClass = 'anxiety-medium';
+            } else {
+                level = 'High Anxiety';
+                colorClass = 'anxiety-high';
+            }
+            
+            elements.anxietyLabel.textContent = level;
+            elements.anxietyLabel.className = `gauge-label ${colorClass}`;
+            elements.anxietyValue.className = `gauge-value ${colorClass}`;
+            
+            // Update anxiety history for chart
+            anxietyHistory.push(anxietyScore);
+            if (anxietyHistory.length > maxHistoryLength) {
+                anxietyHistory.shift();
+            }
+            
+            updateAnxietyChart();
+        }
+
+        // Update keystroke metrics
+        function updateKeystrokeMetrics() {
+            updateMetric(elements.keystrokeRate, currentMetrics.keystrokeRate, 'keys/min', 1);
+            updateMetric(elements.keystrokeVariance, currentMetrics.keystrokeVariance, '', 2);
+            updateMetric(elements.backspaceRate, currentMetrics.backspaceRate, '%', 1);
+            
+            // Update progress bar based on backspace rate (higher = more potential anxiety)
+            const backspaceProgress = Math.min((currentMetrics.backspaceRate || 0) * 300, 100);
+            document.getElementById('keystrokeProgress').style.width = `${backspaceProgress}%`;
+        }
+
+        // Update activity metrics
+        function updateActivityMetrics() {
+            updateMetric(elements.activeTime, currentMetrics.activeTime, 'min', 0);
+            updateMetric(elements.idleRatio, currentMetrics.idleRatio, '', 2);
+            updateMetric(elements.focusSwitches, currentMetrics.focusSwitches, '', 0);
+            
+            // Update progress bar based on focus switches
+            const focusProgress = Math.min((currentMetrics.focusSwitches || 0) * 5, 100);
+            document.getElementById('activityProgress').style.width = `${focusProgress}%`;
+        }
+
+        // Update error metrics
+        function updateErrorMetrics() {
+            updateMetric(elements.errorFrequency, currentMetrics.errorFrequency, 'errors/min', 2);
+            updateMetric(elements.resolutionTime, currentMetrics.resolutionTime, 'sec', 0);
+            updateMetric(elements.consecutiveErrors, currentMetrics.consecutiveErrors, 'errors', 0);
+            
+            // Update progress bar based on error frequency
+            const errorProgress = Math.min((currentMetrics.errorFrequency || 0) * 100, 100);
+            document.getElementById('errorProgress').style.width = `${errorProgress}%`;
+        }
+
+        // Update compilation metrics
+        function updateCompilationMetrics() {
+            updateMetric(elements.totalCompilations, currentMetrics.totalCompilationAttempts, '', 0);
+            updateMetric(elements.compilationSuccessRate, currentMetrics.compilationSuccessRate, '%', 1);
+            updateMetric(elements.currentFileAttempts, currentMetrics.currentFileAttempts, '', 0);
+            
+            // Update progress bar based on compilation attempts
+            const compilationProgress = Math.min((currentMetrics.currentFileAttempts || 0) * 20, 100);
+            document.getElementById('compilationProgress').style.width = `${compilationProgress}%`;
+        }
+
+        // Update undo/redo metrics
+        function updateUndoRedoMetrics() {
+            updateMetric(elements.totalUndos, currentMetrics.totalUndos, '', 0);
+            updateMetric(elements.totalRedos, currentMetrics.totalRedos, '', 0);
+            updateMetric(elements.undoRedoRatio, currentMetrics.undoRedoRatio, '', 2);
+            
+            // Update progress bar based on undo/redo ratio
+            const undoRedoProgress = Math.min((currentMetrics.undoRedoRatio || 0) * 20, 100);
+            document.getElementById('undoRedoProgress').style.width = `${undoRedoProgress}%`;
+        }
+
+        // Update session information
+        function updateSessionInfo() {
+            updateMetric(elements.sessionDuration, currentMetrics.sessionDuration, 'min', 0);
+            updateMetric(elements.filesOpened, currentMetrics.filesOpened, '', 0);
+            updateMetric(elements.totalKeystrokes, currentMetrics.totalKeystrokes, '', 0);
+            updateMetric(elements.dataConfidence, currentMetrics.dataConfidence, '%', 1);
+            updateMetric(elements.currentFile, currentMetrics.currentFile, '', 0);
+            
+            // Update collection status
+            updateCollectionStatus(currentMetrics.collectionActive);
+        }
+
+        // Update collection status
+        function updateCollectionStatus(active) {
+            const statusElement = elements.collectionStatus;
+            const indicator = statusElement.querySelector('.status-indicator');
+            const text = statusElement.querySelector('span:last-child');
+            
+            if (active) {
+                indicator.className = 'status-indicator status-active';
+                text.textContent = 'Active';
+                elements.collectionToggle.checked = true;
+            } else {
+                indicator.className = 'status-indicator status-inactive';
+                text.textContent = 'Paused';
+                elements.collectionToggle.checked = false;
+            }
+        }
+
+        // Update insights and recommendations
+        function updateInsights() {
+            const anxietyScore = currentMetrics.anxietyScore || 0;
+            const insights = [];
+            
+            if (anxietyScore > 0.7) {
+                insights.push(
+                    "High anxiety detected. Consider taking a short break to reset.",
+                    "Multiple error patterns observed. Focus on resolving one issue at a time.",
+                    "Your typing patterns show signs of stress. Try deep breathing exercises.",
+                    "Frequent undo/redo actions suggest uncertainty. Consider writing pseudocode first."
+                );
+            } else if (anxietyScore > 0.4) {
+                insights.push(
+                    "Moderate anxiety levels detected. Monitor your pace and take micro-breaks.",
+                    "Consider breaking down complex tasks into smaller, manageable pieces.",
+                    "Your activity patterns show some stress. Stay hydrated and maintain good posture."
+                );
+            } else {
+                insights.push(
+                    "Low anxiety levels detected. Maintain your current productive workflow.",
+                    "Good coding rhythm observed. Continue with your current approach.",
+                    "Balanced activity patterns. Consider setting incremental goals."
+                );
+            }
+            
+            // Add specific insights based on metrics
+            if ((currentMetrics.backspaceRate || 0) > 0.3) {
+                insights.push("High backspace rate detected. This may indicate uncertainty in code structure.");
+            }
+            
+            if ((currentMetrics.errorFrequency || 0) > 0.5) {
+                insights.push("Frequent errors detected. Consider using more defensive programming techniques.");
+            }
+            
+            if ((currentMetrics.focusSwitches || 0) > 10) {
+                insights.push("Frequent context switching detected. Try focusing on one task at a time.");
+            }
+            
+            // Update insights container
+            elements.insightsContainer.innerHTML = insights
+                .map(insight => `<div class="insight-item">${insight}</div>`)
+                .join('');
+        }
+
+        // Update activity timeline
+        function updateActivityTimeline() {
+            // Generate random activity data for demo
+            const activityData = Array.from({length: 20}, () => Math.random() * 100);
+            
+            elements.activityTimeline.innerHTML = activityData
+                .map(height => `<div class="timeline-bar" style="height: ${height}%"></div>`)
+                .join('');
+        }
+
+        // Update anxiety chart
+        function updateAnxietyChart() {
+            const canvas = document.getElementById('anxietyChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.parentElement.clientWidth;
+            const height = canvas.parentElement.clientHeight;
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            if (anxietyHistory.length < 2) return;
+            
+            // Draw chart
+            const maxValue = Math.max(...anxietyHistory);
+            const xStep = width / (anxietyHistory.length - 1);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, height - (anxietyHistory[0] / maxValue) * height * 0.8);
+            
+            anxietyHistory.forEach((value, index) => {
+                const x = index * xStep;
+                const y = height - (value / maxValue) * height * 0.8;
+                ctx.lineTo(x, y);
+            });
+            
+            ctx.strokeStyle = getAnxietyColor(currentMetrics.anxietyScore || 0);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Helper function to get anxiety color
+        function getAnxietyColor(score) {
+            if (score < 0.3) return '#89d185';
+            if (score < 0.7) return '#cca700';
+            return '#f48771';
+        }
+
+        // Helper function to update metric values
+        function updateMetric(element, value, suffix = '', precision = 0) {
+            if (value === undefined || value === null) {
+                element.textContent = '--';
+                return;
+            }
+            
+            let displayValue;
+            if (typeof value === 'number') {
+                if (suffix === '%') {
+                    displayValue = (value * 100).toFixed(precision);
+                } else {
+                    displayValue = value.toFixed(precision);
+                }
+            } else {
+                displayValue = value;
+            }
+            
+            element.textContent = suffix ? `${displayValue}${suffix}` : displayValue;
+        }
+
+        // Initialize anxiety chart on resize
+        window.addEventListener('resize', updateAnxietyChart);
+    </script>
+</body>
+</html>

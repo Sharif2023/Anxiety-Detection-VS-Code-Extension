@@ -1,0 +1,90 @@
+{
+  "name": "programming-anxiety-detector",
+  "displayName": "Programming Anxiety Detector",
+  "description": "Research tool for detecting programming anxiety through behavioral data analysis",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "anxiety-detector.dashboard",
+          "name": "Anxiety Dashboard",
+          "icon": "$(graph)",
+          "contextualTitle": "Programming Anxiety Detector"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "anxiety-detector.showDashboard",
+        "title": "Show Anxiety Dashboard",
+        "category": "Programming Anxiety"
+      },
+      {
+        "command": "anxiety-detector.exportData",
+        "title": "Export Anxiety Data",
+        "category": "Programming Anxiety"
+      },
+      {
+        "command": "anxiety-detector.pauseCollection",
+        "title": "Pause Data Collection",
+        "category": "Programming Anxiety"
+      },
+      {
+        "command": "anxiety-detector.resumeCollection",
+        "title": "Resume Data Collection",
+        "category": "Programming Anxiety"
+      }
+    ],
+    "configuration": {
+      "title": "Programming Anxiety Detector",
+      "properties": {
+        "anxietyDetector.dataCollectionEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable data collection"
+        },
+        "anxietyDetector.dataStoragePath": {
+          "type": "string",
+          "default": "",
+          "description": "Custom path for data storage (empty for workspace)"
+        },
+        "anxietyDetector.samplingRate": {
+          "type": "number",
+          "default": 1000,
+          "description": "Data sampling rate in milliseconds"
+        },
+        "anxietyDetector.idleThreshold": {
+          "type": "number",
+          "default": 30000,
+          "description": "Idle time threshold in milliseconds"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "tsc --noEmit",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "16.x",
+    "@types/vscode": "^1.60.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "csv-writer": "^1.6.0"
+  }
+}
