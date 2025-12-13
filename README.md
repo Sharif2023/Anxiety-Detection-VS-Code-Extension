@@ -38,7 +38,12 @@ All data is automatically saved to a CSV file for analysis and research purposes
 4. Click the `...` menu at the top
 5. Select "Install from VSIX..."
 6. Choose the downloaded `.vsix` file
-7. Restart VS Code
+7. If no .vsix shows then install from terminal
+```bash
+npm install -g vsce
+vsce package
+```
+8. Restart VS Code
 
 ### Method 2: From Source
 1. Clone or download this repository
