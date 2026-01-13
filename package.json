@@ -3,6 +3,11 @@
   "displayName": "Programming Anxiety Detector",
   "description": "Research tool for detecting programming anxiety through behavioral data analysis",
   "version": "1.0.0",
+  "publisher": "sharif-anxiety-research",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sharif2023/Anxiety-Detection-VS-Code-Extension"
+  },
   "engines": {
     "vscode": "^1.60.0"
   },
