@@ -1,6 +1,6 @@
 # Programming Anxiety Detector - VS Code Extension
 
-A comprehensive research tool for detecting and analyzing programming anxiety through behavioral data collection. This extension continuously monitors your coding behavior and provides insights into anxiety patterns during programming sessions.
+A comprehensive research tool and behavioral analysis system for detecting and analyzing programming anxiety through behavioral data collection. This extension project is a research-backed tool that monitors 12 validated metrics during coding sessions and calculates an anxiety score (0-100) with various risk levels.
 
 ## 📋 Table of Contents
 
@@ -15,11 +15,14 @@ A comprehensive research tool for detecting and analyzing programming anxiety th
 - [Understanding the Metrics](#understanding-the-metrics)
 - [Troubleshooting](#troubleshooting)
 - [Privacy & Data Storage](#privacy--data-storage)
+- [Research References](#research-references)
 - [Research Use](#research-use)
 
 ## 🎯 Overview
 
-The Programming Anxiety Detector extension collects behavioral data while you code, including:
+The Programming Anxiety Detector extension collects behavioral data while you code, leveraging research-backed metrics to provide insights into your coding state. The system is based on studies by Lau (2018), Yu et al. (2025), Becker (2016), and Perera (2023).
+
+It monitors:
 - **Keystroke patterns** (typing speed, variance, backspace rate)
 - **Activity metrics** (active time, idle time, focus switches)
 - **Error tracking** (frequency, resolution time, consecutive errors)
@@ -297,52 +300,34 @@ The CSV file contains the following columns:
 }
 ```
 
-## 📈 Understanding the Metrics
+### Risk Levels
 
-### Anxiety Score
-- **Range**: 0.0 to 1.0 (0% to 100%)
-- **Calculation**: Based on multiple factors:
-  - High keystroke rate with high variance
-  - High backspace rate (uncertainty indicator)
-  - High idle ratio (distraction/frustration)
-  - Frequent focus switches
-  - High error frequency
-  - Long error resolution times
-  - Many consecutive errors
+| Level | Score | Meaning |
+|-------|-------|---------|
+| 🟢 LOW | 0-30 | Normal coding flow |
+| 🟡 MODERATE | 31-60 | Elevated stress, consider a break |
+| 🟠 HIGH | 61-80 | Significant anxiety, intervention suggested |
+| 🔴 CRITICAL | 81-100 | Acute distress, immediate support recommended |
 
-### Anxiety Levels
-- **Low**: Score < 0.3 (30%)
-  - Normal, productive coding state
-- **Medium**: Score 0.3 - 0.7 (30-70%)
-  - Some stress patterns detected
-  - Consider taking breaks
-- **High**: Score > 0.7 (70%)
-  - Significant stress indicators
-  - Recommended: Take a break, review errors
+### Monitored Metrics (Weighted)
 
-### Keystroke Metrics
-- **Rate (KPM)**: Average keystrokes per minute
-  - Normal: 100-200 KPM
-  - High: >200 KPM (may indicate rushing)
-- **Variance**: Variability in typing speed
-  - Low: Consistent typing
-  - High: Erratic typing (may indicate stress)
-- **Backspace %**: Percentage of deletions
-  - Normal: 5-15%
-  - High: >30% (may indicate uncertainty)
+#### Tier 1 - High Predictive (70% weight)
+1. **Keystroke Latency Variance (ms)**: Variability in typing speed (higher = more erratic)
+2. **Typing Speed Deviation**: WPM deviation from baseline
+3. **Error Frequency**: Errors per minute
+4. **Pause Duration Ratio**: Ratio of gaps (>2s)
+5. **Error Resolution Time**: Time to fix errors
 
-### Activity Metrics
-- **Idle Ratio**: Ratio of idle time to active time
-  - Low (<1): Mostly active
-  - High (>2): Frequent pauses (may indicate difficulty)
+#### Tier 2 - Medium Predictive (25% weight)
+6. **Backspace Rate**: Per 100 keystrokes
+7. **Consecutive Errors**: Errors in sequence (last 5 minutes)
+8. **Undo/Redo Frequency**: Operations per 10 minutes
+9. **Idle Time Ratio (%)**: Ratio of idle to active time
 
-### Error Metrics
-- **Error Frequency**: Errors per minute
-  - Higher frequency may indicate struggling
-- **Resolution Time**: Average time to fix errors
-  - Longer times may indicate frustration
-- **Consecutive Errors**: Multiple errors in sequence
-  - High count may indicate compounding problems
+#### Tier 3 - Low Predictive (5% weight)
+10. **Focus Switches**: Tab changes/min
+11. **Compile Success Rate (%)**: Successful builds
+12. **Session Fragmentation**: Breaks >30s
 
 ## 🔧 Troubleshooting
 
@@ -451,6 +436,13 @@ The CSV file contains the following columns:
 - Data persists until manually deleted
 - No automatic cleanup
 - You control all data lifecycle
+
+## 📚 Research References
+
+- **Lau (2018)** - Keystroke dynamics for stress detection (89.5% accuracy)
+- **Yu et al. (2025)** - Programming anxiety ML model (97.8% accuracy)
+- **Becker (2016)** - Compiler error metrics correlation
+- **Perera (2023)** - Real-time stress detection systems (83.6% accuracy)
 
 ## 🔬 Research Use
 
